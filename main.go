@@ -84,7 +84,63 @@ func main() {
 	//iota as a switch statement
 	var roles byte = isAdmin | canSeeNorthAmerica | canSeeSouthAmerica
 	fmt.Printf("%b, %T \n", roles, roles)
-	fmt.Printf("Is Admin? %v \n", isAdmin & roles == isAdmin)
-	fmt.Printf("Is canSeeEurope? %v \n", canSeeEurope & roles == canSeeEurope)
+	fmt.Printf("Is Admin? %v \n", isAdmin&roles == isAdmin)
+	fmt.Printf("Is canSeeEurope? %v \n", canSeeEurope&roles == canSeeEurope)
+
+	//   ARRAYS AND SLICES (two collection types)
+	grades := [3]int{97, 85, 93} //or
+	grades2 := [...]int{97, 85, 93}
+	fmt.Printf("Grades: %v \n", grades)
+	fmt.Printf("Grades: %v \n", grades2)
+
+	var students [3]string
+	fmt.Printf("Students: %v \n", students)
+	students[0] = "Vlasis"
+	students[1] = "Gianna"
+	students[2] = "Tsal"
+	fmt.Printf("Students: %v \n", students)
+	fmt.Printf("Size of students: %v \n", len(students))
+
+	//copies the whole array into a NEW array
+	gradesCopy := grades
+	gradesCopy[1] = 5
+	fmt.Printf("Grades: %v \n", grades)
+	fmt.Printf("Grades: %v \n", gradesCopy)
+
+	//pointers. Pass a reference
+	gradesPointer := &grades
+	gradesPointer[1] = 5
+	fmt.Printf("Grades: %v \n", grades)
+	fmt.Printf("Grades: %v \n", gradesPointer)
+
+	//initialize a slice. No dots into []
+	gradesSlice := []int{97, 85, 93}
+	fmt.Printf("Size of grades slice: %v \n", len(gradesSlice))     //size of slice
+	fmt.Printf("Capacity of grades slice: %v \n", cap(gradesSlice)) //size of underline array
+
+	//slices are reference types (add and remove elements from slice during their lifetime)
+	gradesSliceCopy := gradesSlice
+	gradesSliceCopy[1] = 5
+	fmt.Printf("Grades: %v \n", grades)
+	fmt.Printf("Grades: %v \n", gradesSliceCopy)
+
+	sliceWithMake := make([]int, 3, 3)
+	fmt.Printf("sliceWithMake: %v \n", sliceWithMake)
+	fmt.Printf("Size of sliceWithMake slice: %v \n", len(sliceWithMake))     //size of slice
+	fmt.Printf("Capacity of sliceWithMake slice: %v \n", cap(sliceWithMake)) //size of underline array
+	sliceWithMake = append(sliceWithMake, 3)                                 //capacity increased
+	fmt.Printf("sliceWithMake: %v \n", sliceWithMake)
+	fmt.Printf("Size of sliceWithMake slice: %v \n", len(sliceWithMake))     //size of slice
+	fmt.Printf("Capacity of sliceWithMake slice: %v \n", cap(sliceWithMake)) //size of underline array
+	sliceWithMake = append(sliceWithMake, 5, 6, 7, 8)                        //capacity increased
+	fmt.Printf("sliceWithMake: %v \n", sliceWithMake)
+	fmt.Printf("Size of sliceWithMake slice: %v \n", len(sliceWithMake))     //size of slice
+	fmt.Printf("Capacity of sliceWithMake slice: %v \n", cap(sliceWithMake)) //size of underline array
+
+	//remove the element from index 2. Careful yoy work with references here
+	testSlice := []int{1,2,3,4,5}
+	testSliceResult := append(testSlice[:2], testSlice[3:]...)
+	fmt.Printf("testSliceResult: %v \n", testSliceResult)
+
 
 }
