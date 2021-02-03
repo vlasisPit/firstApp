@@ -21,6 +21,22 @@ var test string = "test variable"
 //2nd scope: it is globally visible because the first the letter is uppercase
 var Test string = "test variable 2"
 
+const (
+	catSpecialist = iota
+	dogSpecialist
+	snakeSpecialist
+)
+
+const (
+	isAdmin = 1 << iota
+	isHeadquarters
+	canSeeAfrica
+	canSeeAsia
+	canSeeEurope
+	canSeeNorthAmerica
+	canSeeSouthAmerica
+)
+
 func main() {
 	//3rd scope: block scoped. It is visible only inside the block
 	i := 43            //this will infer an int by default
@@ -42,4 +58,33 @@ func main() {
 	fmt.Printf("%v, %T \n", changeVariableType, changeVariableType)
 	changeVariableType = strconv.Itoa(a)
 	fmt.Printf("%v, %T \n", changeVariableType, changeVariableType)
+
+	//     PRIMITIVES
+	var n bool = true
+	var defaultBool bool //false
+	fmt.Printf("%v, %T \n", n, n)
+	fmt.Printf("%v, %T \n", defaultBool, defaultBool)
+
+	var signedInteger int32 = 422
+	fmt.Printf("%v, %T \n", signedInteger, signedInteger)
+
+	var unsignedInteger uint16 = 422
+	fmt.Printf("%v, %T \n", unsignedInteger, unsignedInteger)
+
+	//		CONSTANTS
+	//naming convention is valid here. That's why we dont use upper case letters
+	//Immutable and can be swadowed
+	const myConst int = 42
+	//myConst = 43 compiler throws an error
+	fmt.Printf("%v, %T \n", myConst, myConst)
+
+	var specialistType int = 2
+	fmt.Printf("%v, %T \n", specialistType == snakeSpecialist, specialistType == snakeSpecialist)
+
+	//iota as a switch statement
+	var roles byte = isAdmin | canSeeNorthAmerica | canSeeSouthAmerica
+	fmt.Printf("%b, %T \n", roles, roles)
+	fmt.Printf("Is Admin? %v \n", isAdmin & roles == isAdmin)
+	fmt.Printf("Is canSeeEurope? %v \n", canSeeEurope & roles == canSeeEurope)
+
 }
