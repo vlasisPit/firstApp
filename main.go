@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"     //	Package fmt implements formatted I/O with functions analogous to C's printf and scanf.
 	"strconv" //Package strconv implements conversions to and from string representations of basic data types.
+	"reflect"
 )
 
 //Declare variable on package level. Have to use full declaration syntax
@@ -37,7 +38,34 @@ const (
 	canSeeSouthAmerica
 )
 
+/*You need to use capital letters to all variables of the struct to be visible outside of the package !!!!!
+No underscores on field names or struct names*/
+type Doctor struct {
+	Number     int
+	ActorName  string
+	Companions []string
+}
+
+/*
+Tags to make some validations on the data `required max:"100"`
+*/
+type Animal struct {
+	Name   string `required max : "100"`
+	Origin string
+}
+
+type Bird struct {
+	Animal   //composition or embedding
+	SpeedKPH float32
+	CanFly   bool
+}
+
 func main() {
+	/*
+		n Go, := is for declaration + assignment, whereas = is for assignment only.
+		For example, var foo int = 10 is the same as foo := 10
+	*/
+
 	//3rd scope: block scoped. It is visible only inside the block
 	i := 43            //this will infer an int by default
 	var j float32 = 27 //you have more control over the variable
@@ -138,9 +166,83 @@ func main() {
 	fmt.Printf("Capacity of sliceWithMake slice: %v \n", cap(sliceWithMake)) //size of underline array
 
 	//remove the element from index 2. Careful yoy work with references here
-	testSlice := []int{1,2,3,4,5}
+	testSlice := []int{1, 2, 3, 4, 5}
 	testSliceResult := append(testSlice[:2], testSlice[3:]...)
 	fmt.Printf("testSliceResult: %v \n", testSliceResult)
 
+	//		MAPS
+	statePopulations := map[string]int{
+		"California": 39250018,
+		"Texas":      27232432,
+		"Florida":    20232432,
+		"Ohio":       11632432,
+	}
+	fmt.Printf("statePopulations: %v \n", statePopulations)
+	fmt.Printf("Ohio population: %v \n", statePopulations["Ohio"])
+	statePopulations["Georgia"] = 10310371
+	fmt.Printf("Georgia population: %v \n", statePopulations["Georgia"]) //add entry to a map
+	delete(statePopulations, "Texas")                                    //Delete Texas
+	fmt.Printf("Texas population: %v \n", statePopulations["Texas"])     //returns zero
 
+	georgiaPop, ok := statePopulations["Georgia"]
+	fmt.Println(georgiaPop, ok) //ok == true
+
+	georgiaPop2, ok2 := statePopulations["Georgiasss"] //misspelling
+	fmt.Println(georgiaPop2, ok2)                      //ok == false
+
+	fmt.Printf("size %v\n", len(statePopulations))
+
+	sp := statePopulations //pass by reference
+	delete(sp, "Ohio")
+	fmt.Printf("size %v\n", len(sp))
+
+	//		STRUCT
+	aDoctor := Doctor{
+		Number:    3,
+		ActorName: "John",
+		Companions: []string{
+			"Mike",
+			"Jim",
+		},
+	}
+	fmt.Printf("aDoctor %v\n", aDoctor)
+	fmt.Printf("aDoctor name %v\n", aDoctor.ActorName)
+	fmt.Printf("aDoctor companion 1 %v\n", aDoctor.Companions[1])
+
+	//pass copy of the same data
+	anotherDoctor := aDoctor
+	anotherDoctor.ActorName = "Tim"
+	fmt.Printf("aDoctor name %v\n", aDoctor.ActorName)
+	fmt.Printf("anotherDoctor name %v\n", anotherDoctor.ActorName)
+	fmt.Println(aDoctor)
+	fmt.Println(anotherDoctor)
+
+	//pass reference of the same data
+	anotherDoctorRef := &aDoctor
+	anotherDoctorRef.ActorName = "Tim"
+	fmt.Printf("aDoctor name %v\n", aDoctor.ActorName)
+	fmt.Printf("anotherDoctor name %v\n", anotherDoctorRef.ActorName)
+	fmt.Println(aDoctor)
+	fmt.Println(anotherDoctorRef)
+
+	//GO does not support inheritance. GO does not support traditional object oriented principles. Uses composition instead
+	birdInstance := Bird{}
+	birdInstance.Name = "Emu"
+	birdInstance.Origin = "Australia"
+	birdInstance.SpeedKPH = 48
+	birdInstance.CanFly = false
+	fmt.Println(birdInstance)
+	fmt.Println(birdInstance.Name)
+
+	birdInstance2 := Bird{
+		Animal:   Animal{Name: "Em2", Origin: "Europe"},
+		CanFly:   true,
+		SpeedKPH: 67,
+	}
+	fmt.Println(birdInstance2.Name)
+
+	//validation library should read tag via reflection
+	t:=reflect.TypeOf(Animal{})
+	field, _ := t.FieldByName("Name")
+	fmt.Println(field.Tag)
 }
