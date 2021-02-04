@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"     //	Package fmt implements formatted I/O with functions analogous to C's printf and scanf.
-	"strconv" //Package strconv implements conversions to and from string representations of basic data types.
+	"fmt" //	Package fmt implements formatted I/O with functions analogous to C's printf and scanf.
 	"reflect"
+	"strconv" //Package strconv implements conversions to and from string representations of basic data types.
 )
 
 //Declare variable on package level. Have to use full declaration syntax
@@ -242,7 +242,37 @@ func main() {
 	fmt.Println(birdInstance2.Name)
 
 	//validation library should read tag via reflection
-	t:=reflect.TypeOf(Animal{})
+	t := reflect.TypeOf(Animal{})
 	field, _ := t.FieldByName("Name")
 	fmt.Println(field.Tag)
+
+	//   IF AND SWITCH STATEMENTS
+	if pop, ok := statePopulations["Florida"]; ok {
+		fmt.Printf("Florida population: %v \n", pop)
+	}
+
+	number := 50
+	guess := 60
+	if number > guess || returnTrue() {
+		fmt.Println("True")
+	}
+
+	//switch statement for data type
+	var checkType interface{} = "dfas"
+	switch checkType.(type) {
+	case int:
+		fmt.Println("checkType is an int")
+	case float64:
+		fmt.Println("checkType is an float64")
+	case string:
+		fmt.Println("checkType is an string")
+	default:
+		fmt.Println("checkType is another type")
+	}
+
+}
+
+func returnTrue() bool {
+	fmt.Println("returning true")
+	return true
 }
