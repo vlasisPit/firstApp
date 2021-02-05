@@ -270,6 +270,58 @@ func main() {
 		fmt.Println("checkType is another type")
 	}
 
+	// LOOPING
+	// cnt is valid only inside for loop
+	for cnt := 0; cnt < 5; cnt++ {
+		fmt.Println(cnt)
+	}
+
+	//GO does not support while and do. Instead of while you can use
+	cnt2 := 0
+	for cnt2 < 7 {
+		fmt.Println(cnt2)
+		cnt2++
+	}
+
+	//Do-while loop
+	cnt3 := 0
+	for {
+		fmt.Println(cnt3)
+		cnt3++
+		if cnt3 == 15 {
+			break
+		}
+	}
+
+	// works for slices and arrays
+	collectionExample := []int{1, 2, 3, 7}
+	for k, v := range collectionExample { //k,v key-value , index-value
+		fmt.Println(k, v)
+	}
+
+	// works for maps
+	for k, v := range statePopulations {
+		fmt.Println(k, v)
+	}
+
+	//works for strings (unicode representation for a char in string)
+	text := "check range keyword"
+	for k, v := range text {
+		fmt.Println(k, v)
+		fmt.Println(k, string(v))
+	}
+
+	//works also with channels !!!!
+	//you should use both k and v because this is mandatory from the language
+	//if you need only the keys
+	for k := range statePopulations {
+		fmt.Println(k)
+	}
+
+	for _ , v := range statePopulations {
+		fmt.Println(v)
+	}
+
 }
 
 func returnTrue() bool {
