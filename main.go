@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt" //	Package fmt implements formatted I/O with functions analogous to C's printf and scanf.
+	"io/ioutil"
+	"log"
+	"net/http"
 	"reflect"
 	"strconv" //Package strconv implements conversions to and from string representations of basic data types.
 )
@@ -318,13 +321,91 @@ func main() {
 		fmt.Println(k)
 	}
 
-	for _ , v := range statePopulations {
+	for _, v := range statePopulations {
 		fmt.Println(v)
 	}
 
+	//  Control flow constructs: DEFER, PANIC and RECOVER
+	/*
+		DEFER: Delay execution to some future point in time
+		PANIC: Fail fast on errors that shouldn’t occur during normal operation, or that we aren’t prepared to handle gracefully.
+		RECOVER: Save the program when it starts to panic
+	*/
+
+	//Defer keyword to close the resources in an opposite order we opened them !!!!!!!!
+/*	fmt.Println("start")
+	defer deferExample("middle")
+	fmt.Println("end")*/
+
+	/**
+	They run on a LIFO order result: end middle start
+	defer fmt.Println("start")
+	defer deferExample("middle")
+	defer fmt.Println("end")
+	*/
+
+	/*
+		open and close a resource with defer
+	*/
+	runResourceRequest()
+
+	//GO does not support exceptions. Use panic when the application can continue to function
+	/*num1, num2 := 1, 0
+	ans := num1 / num2	//program stops working. You can do the same with panic
+	fmt.Println(ans)*/
+
+	/*fmt.Println("start 1")
+	defer fmt.Println("this was deferred 1")	//this will be executed before panicking
+	panic("something bad happened")
+	fmt.Println("end")*/
+
+	fmt.Println("start")
+	panicker()
+	fmt.Println("end")
+}
+
+/*
+Use an anonymous function to recover from an error. Call the recover function and check the error and the
+execution will continue. If you use panic inside the anonymous function then the program execution will stop
+and you will se the full stacktrace
+ */
+func panicker() {
+	fmt.Println("about to panic")
+	defer func() {		//anonymous function
+		if err := recover(); err != nil {	//call recover function and check the error
+			fmt.Println("Error:", err)
+			//panic(err)	//if you want to panic then you need here to use the panic statement
+		}
+	}()
+	panic("something bad happened")
+	fmt.Println("done panicking")
+}
+
+/*
+Resource request from http package. With defer you can associate the opening and closing of a resource the one
+next to the other
+*/
+func runResourceRequest() {
+	res, err := http.Get("https://restcountries.eu/rest/v2/name/greece")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+	robots, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s", robots)
 }
 
 func returnTrue() bool {
 	fmt.Println("returning true")
 	return true
+}
+
+/**
+Executes the function pass to defer after the functions finishes the final statement but before returns
+*/
+func deferExample(message string) {
+	fmt.Println(message)
 }
