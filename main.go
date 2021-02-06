@@ -333,9 +333,9 @@ func main() {
 	*/
 
 	//Defer keyword to close the resources in an opposite order we opened them !!!!!!!!
-/*	fmt.Println("start")
-	defer deferExample("middle")
-	fmt.Println("end")*/
+	/*	fmt.Println("start")
+		defer deferExample("middle")
+		fmt.Println("end")*/
 
 	/**
 	They run on a LIFO order result: end middle start
@@ -362,17 +362,109 @@ func main() {
 	fmt.Println("start")
 	panicker()
 	fmt.Println("end")
+
+	// POINTERS
+	passByValueExample()
+	passByReferenceExample()
+	pointersOnArrays()
+	pointersOnStructs()
+	pointersOnArraysAndSlices()
+}
+
+/**
+Be careful when you pass around maps and slices because they passes pointers.
+This is not happened when you use primitives and arrays
+*/
+func pointersOnArraysAndSlices() {
+	a1 := [3]int{1, 2, 3} //this is an ARRAY
+	b1 := a1              //pass by value because this is an ARRAY. Copy to a new instance
+	fmt.Println(a1, b1)
+	a1[1] = 42
+	fmt.Println(a1, b1)
+
+	//slice contains a pointer to the underline array.They are copying pointers
+	a2 := []int{1, 2, 3} //this is an SLICE
+	b2 := a2             //pass by reference because this is an SLICE. It copies the reference
+	fmt.Println(a2, b2)
+	a2[1] = 42
+	fmt.Println(a2, b2)
+
+	//same as slices happens with maps because a map contains pointers to underline data
+	a3 := map[string]string{"foo": "bar", "baz": "buz"}
+	b3 := a3
+	fmt.Println(a3, b3)
+	a3["foo"] = "qux"
+	fmt.Println(a3, b3)
+}
+
+func pointersOnStructs() {
+	var ms testStruct
+	ms = testStruct{foo: 42}
+	fmt.Println(ms)
+
+	var msRef *testStruct
+	msRef = &testStruct{foo: 43}
+	fmt.Println(msRef)
+	msRef.foo = 8978
+	fmt.Println(msRef)
+
+	var msNew *testStruct
+	fmt.Println(msNew) //prints nil
+	//fmt.Println(msNew.foo) //this will give a runTimeException
+	msNew = new(testStruct)
+	fmt.Println(msNew)
+	(*msNew).foo = 45 //you can use directly msNew.foo without use the dereference first
+	fmt.Println((*msNew).foo)
+}
+
+type testStruct struct {
+	foo int
+}
+
+func pointersOnArrays() {
+	a := [3]int{1, 2, 3}
+	b := &a[0]
+	c := &a[1]
+	fmt.Printf("%v %p %p \n", a, b, c)
+
+	//To take the value of the reference use *c,
+	*c = 89
+	fmt.Println(a)
+
+}
+
+func passByReferenceExample() {
+	var test1 int = 42
+	var test2 *int = &test1    //test2 is pointer to an integer and is pointing on test1
+	fmt.Println(test1, test2)  //test2 print the numerical representation of the memory address which holds the test1
+	fmt.Println(&test1, test2) //same result. Both print the address location
+
+	//dereference operator. Check tha value of an address
+	fmt.Println(&test1, *test2)
+	test1 = 27
+	fmt.Println(test1, *test2)
+
+	*test2 = 11
+	fmt.Println(test1, *test2)
+}
+
+func passByValueExample() {
+	test1 := 42
+	test2 := test1 //does not point to the same memory location
+	test1 = 26
+	fmt.Println(test1, test2)
+	fmt.Println(test1, test2)
 }
 
 /*
 Use an anonymous function to recover from an error. Call the recover function and check the error and the
 execution will continue. If you use panic inside the anonymous function then the program execution will stop
 and you will se the full stacktrace
- */
+*/
 func panicker() {
 	fmt.Println("about to panic")
-	defer func() {		//anonymous function
-		if err := recover(); err != nil {	//call recover function and check the error
+	defer func() {                        //anonymous function
+		if err := recover(); err != nil { //call recover function and check the error
 			fmt.Println("Error:", err)
 			//panic(err)	//if you want to panic then you need here to use the panic statement
 		}
