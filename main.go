@@ -369,6 +369,138 @@ func main() {
 	pointersOnArrays()
 	pointersOnStructs()
 	pointersOnArraysAndSlices()
+
+	//	FUNCTIONS
+	greeting := "Hello"
+	name := "Vlasis"
+	sayGreetingByValue(greeting, name) //pass by value
+	fmt.Println("Caller name " + name)
+
+	//passing a reference is more performant because you are passing a reference and not a data structure
+	sayGreetingByReference(&greeting, &name) //pass by value
+	fmt.Println("Caller name " + name)
+
+	sum(1, 2, 3, 4, 5)
+	sumAlt("The sum is", 1, 2, 3, 4, 5)
+	fmt.Println("The sum is", getSum(1, 2, 3, 4, 5))
+
+	sumResult := getSumPointer(1, 2, 3, 4, 5)
+	fmt.Println("The sumPointer is (1) ", sumResult) //you need to dereference
+	fmt.Println("The sumPointer is (2) ", *sumResult)
+
+	divResult := divide(5, 0) //return +inf. The program does not stop
+	//divWithPanicResult := divideWithPanic(5, 0) //rThe program will stop
+	fmt.Println(divResult)
+	divResult2Types, err := divideWithTwoReturnTypes(5, 0)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(divResult2Types)
+
+	//in GO functions can be passed as parameters in functions
+	//anonymous function.
+	func() {
+		msg := "Hello from anonymous function"
+		fmt.Println(msg)
+	}() //if you use these parentheses here, the code inside the function will be executed
+
+	//Type signature is func()
+	var anonymousFunc func(test string) = func(message string) {
+		msg := "Hello from anonymous function 2"
+		fmt.Println(msg + message)
+	}
+	anonymousFunc("Test this")
+
+	//Methods
+	g := greeter{
+		greeting: "Hello",
+		name:     "Go from method",
+	}
+	g.greet()
+}
+
+type greeter struct {
+	greeting string
+	name     string
+}
+
+/*
+Method which executed in a known context. We get a copy (the value) of a greeter
+You can pass a pointer also. eg -> func (g1 *greeter)
+ */
+func (g1 greeter) greet() {
+	fmt.Println(g1.greeting, g1.name)
+}
+
+func divideWithTwoReturnTypes(a, b float64) (float64, error) {
+	if b == 0.0 {
+		return 0.0, fmt.Errorf("cannot divide by zero")
+	}
+	return a / b, nil
+}
+
+func divide(a, b float64) float64 {
+	return a / b
+}
+
+/*
+The application will stop
+*/
+func divideWithPanic(a, b float64) float64 {
+	if b == 0.0 {
+		panic("Cannot provide zero as second value")
+	}
+	return a / b
+}
+
+func getSumPointer(values ...int) *int { //slice
+	fmt.Println(values)
+	result := 0
+	for _, v := range values {
+		result += v
+	}
+	fmt.Println("The sum is", result)
+	return &result //in GO, this variable is promoted to be on the share memory (heap memory). The memory is not cleared
+}
+
+func getSum(values ...int) int { //slice
+	fmt.Println(values)
+	result := 0
+	for _, v := range values {
+		result += v
+	}
+	fmt.Println("The sum is", result)
+	return result
+}
+
+func sum(values ...int) { //slice
+	fmt.Println(values)
+	result := 0
+	for _, v := range values {
+		result += v
+	}
+	fmt.Println("The sum is", result)
+}
+
+func sumAlt(message string, values ...int) { //slice
+	fmt.Println(values)
+	result := 0
+	for _, v := range values {
+		result += v
+	}
+	fmt.Println(message, result)
+}
+
+func sayGreetingByValue(greeting, name string) {
+	fmt.Println(greeting, name)
+	name = "Ted"
+	fmt.Println(greeting, name)
+}
+
+func sayGreetingByReference(greeting, name *string) {
+	fmt.Println(*greeting, *name)
+	*name = "Ted"
+	fmt.Println(*greeting, *name)
 }
 
 /**
