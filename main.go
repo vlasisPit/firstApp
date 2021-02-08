@@ -417,6 +417,54 @@ func main() {
 		name:     "Go from method",
 	}
 	g.greet()
+
+	// INTERFACES
+	var w Writer = ConsoleWriter{} //polymorphic behaviour
+	w.Write([]byte("Hello Go for interface !!!"))
+
+	/*
+		Interfaces can work the other way around. For example we have an existing concrete implementation
+		You can write an interface which has the same signature as the concrete implementation.
+		Naming convention. Interface with single signature must be named with -er postfix
+	*/
+	myInt := IntCounter(0)
+	var inc Incrementer = &myInt
+	for i := 0; i < 10; i++ {
+		fmt.Println(inc.Increment())
+	}
+
+	//5:12:00
+
+
+}
+
+type Incrementer interface {
+	Increment() int
+}
+
+type IntCounter int
+
+func (ic *IntCounter) Increment() int {
+	*ic++
+	return int(*ic)
+}
+
+/*
+Interfaces describers behaviour and NOT data like structs
+*/
+type Writer interface {
+	Write([]byte) (int, error)
+}
+
+/*
+In GO, you dont need to use implements to define explicitly an implementation of an interface
+You can add a struct with the signature of the interface as a method
+*/
+type ConsoleWriter struct{}
+
+func (cw ConsoleWriter) Write(data []byte) (int, error) {
+	n, err := fmt.Println(string(data))
+	return n, err
 }
 
 type greeter struct {
@@ -427,7 +475,7 @@ type greeter struct {
 /*
 Method which executed in a known context. We get a copy (the value) of a greeter
 You can pass a pointer also. eg -> func (g1 *greeter)
- */
+*/
 func (g1 greeter) greet() {
 	fmt.Println(g1.greeting, g1.name)
 }
