@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"runtime"
 	"strconv" //Package strconv implements conversions to and from string representations of basic data types.
+	"sync"
 )
 
 //Declare variable on package level. Have to use full declaration syntax
@@ -62,6 +64,18 @@ type Bird struct {
 	SpeedKPH float32
 	CanFly   bool
 }
+
+/*
+Synchronize multiple GoRoutines together
+*/
+var wg = sync.WaitGroup{}
+var counter = 0
+
+/*
+Many things can read the data, but only one can write
+When a writer arrives, it waits for all the readers to finish
+*/
+var mutex = sync.RWMutex{}
 
 func main() {
 	/*
@@ -435,7 +449,76 @@ func main() {
 
 	//5:12:00
 
+	// GOROUTINES (concurrent and parallel programming in Go)
+	//Goroutine. Abstraction of a thread. There is a scheduler to map the Goroutines to operating system threads.
+	//Scheduler take turns with every CPU thread which is available and assign every Goroutine a certain amount of processing time
+	//on the CPU thread. Goroutines can reallocated very quickly.
+	sayHello("Hello 1")
+	go sayHello("Hello 2") //run in a green thread. This will not be printed because the execution of the program has been completed
 
+	//we need to synchronize the main function with the goroutine
+	wg.Add(2)
+	goRoutineAnonymousFunc()
+	goRoutineAnonymousFuncWithoutRaceCondition()
+	wg.Wait()
+	//time.Sleep(100 * time.Millisecond)		//you should use weightGroup instead of time.Sleep
+
+	//we should use mutex to synchronize the increments
+	//The locks must be executed before each goroutine call, else the same data will be printed on sayHello2
+	//lock in the same context. Here, you should remove the concurrency. Run on a single thread, because you have the overhead
+	//of locking and unlocking the mutexes
+	for i := 0; i < 10; i++ {
+		wg.Add(2)
+		mutex.RLock() //read lock
+		go sayHello2()
+		mutex.Lock()
+		go increment()
+	}
+	wg.Wait()
+
+	//number of threads available in the application
+	//number of operating system threads equal to the number of cores.
+	fmt.Printf("Threads: %v \n", runtime.GOMAXPROCS(-1))
+
+	//now the app has only one thread available. Single threaded app
+	fmt.Printf("Threads: %v  \n", runtime.GOMAXPROCS(1))
+
+	//you can set it at every value you prefer. It creates 100 operating system threads
+	fmt.Printf("Threads: %v  \n", runtime.GOMAXPROCS(100))
+}
+
+func sayHello2() {
+	fmt.Printf("Hello # %v \n", counter)
+	mutex.RUnlock()
+	wg.Done()
+}
+
+func increment() {
+	counter++
+	mutex.Unlock()
+	wg.Done()
+}
+
+func goRoutineAnonymousFuncWithoutRaceCondition() {
+	var msg = "Hello from anonymous func 2"
+	go func(msg string) {
+		fmt.Println(msg)
+		wg.Done()
+	}(msg)                                //this a copy of msg at the time of the call
+	msg = "Goodbye from anonymous func 2" //race condition
+}
+
+func goRoutineAnonymousFunc() {
+	var msg = "Hello from anonymous func"
+	go func() {
+		fmt.Println(msg) //closure (Not a good idea to use because of the race condition in the next line)
+		wg.Done()
+	}()
+	msg = "Goodbye from anonymous func" //race condition
+}
+
+func sayHello(message string) {
+	fmt.Println(message)
 }
 
 type Incrementer interface {
