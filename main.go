@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv" //Package strconv implements conversions to and from string representations of basic data types.
 	"sync"
+	"time"
 )
 
 //Declare variable on package level. Have to use full declaration syntax
@@ -485,6 +486,211 @@ func main() {
 
 	//you can set it at every value you prefer. It creates 100 operating system threads
 	fmt.Printf("Threads: %v  \n", runtime.GOMAXPROCS(100))
+
+	// CHANNELS
+	//channels are designed to synchronize data transition between multiple GoRoutines
+	/*
+	We need buffers because
+	-Channels block sender side till receiver is available
+	-Block receiver side till message is available
+	 */
+	channelExample1()
+	multipleGoroutinesOnSingleChannel()
+	//multipleGoroutinesOnSingleChannelDifferentNumbersOfSendersAndReceivers()
+	goRoutineWithReaderAndWriterRole()
+	goRoutineWithDefinedRole()
+	goRoutineWithDifferentNumOfMessages()
+	loggerImplementation()
+}
+
+const (
+	logInfo    = "INFO"
+	logWarning = "WARNING"
+	logError   = "ERROR"
+)
+
+type logEntry struct {
+	time     time.Time
+	severity string
+	message  string
+}
+
+var logChannel = make(chan logEntry, 50)
+var doneChannel = make(chan struct{}) //saves memory allocation
+
+func loggerImplementation() {
+	go logger()
+	/*
+		You need to have a way to close the logChannel. You can use defer
+			defer func() {
+				close(logChannel)
+			}()
+		An other approach is to use a select statement. You must have a second channel to send a message when you need
+		to stop the application (doneChannel)
+	*/
+
+	logChannel <- logEntry{time.Now(), logInfo, "App is starting"}
+	logChannel <- logEntry{time.Now(), logInfo, "App is shutting down"}
+	time.Sleep(100 * time.Millisecond)
+	doneChannel <- struct{}{}
+}
+
+func logger() {
+	/*for entry := range logChannel {
+		fmt.Printf("%v - [%v]%v \n", entry.time.Format("2006-01-02T15:04:05"), entry.severity, entry.message)
+	}*/
+	//select statement on an infinity loop
+	for {
+		select {
+		case entry := <-logChannel:
+			fmt.Printf("%v - [%v]%v \n", entry.time.Format("2006-01-02T15:04:05"), entry.severity, entry.message)
+		case <-doneChannel:
+			break
+		}
+	}
+}
+
+func goRoutineWithDifferentNumOfMessages() {
+	//buffers are useful when the receiver and the sender works on different frequencies
+	intChannel := make(chan int, 50) //buffer of size 50
+
+	wg.Add(2)
+	go func(intChannel <-chan int) { //receiving ONLY channel
+		/*		readFromChannelOneByOne(intChannel)
+				readFromChannelWithLoopWithoutChecking(intChannel)*/
+		readFromChannelWithLoopCheckingFirst(intChannel)
+		wg.Done()
+	}(intChannel)
+
+	go func(intChannel chan<- int) { //sending ONLY channel
+		intChannel <- 1
+		intChannel <- 2 //the second message will create a deadlock, because nobody can read it. We must add a buffer
+		//but the message will be lost.
+		close(intChannel) //if you close the channel, you cannot send messages again
+		wg.Done()
+	}(intChannel)
+
+	wg.Wait()
+}
+
+func readFromChannelWithLoopCheckingFirst(intChannel <-chan int) {
+	for {
+		if i, ok := <-intChannel; ok {
+			fmt.Printf("Receive from channel value (Check queue) - %v  \n", i)
+		} else {
+			break
+		}
+	}
+}
+
+func readFromChannelOneByOne(intChannel <-chan int) {
+	i := <-intChannel //receiving data from a channel
+	fmt.Printf("Receive from channel value (Different num of messages) - %v  \n", i)
+	i = <-intChannel //receiving data from a channel
+	fmt.Printf("Receive from channel value (Different num of messages) - %v  \n", i)
+}
+
+func readFromChannelWithLoopWithoutChecking(intChannel <-chan int) {
+	for i := range intChannel {
+		//this will create a deadlock, because the loop cannot read anything else
+		//we need to close the channel on the sender
+		fmt.Printf("Receive from channel value (Different num of messages) - %v  \n", i)
+	}
+}
+
+func goRoutineWithDefinedRole() {
+	intChannel := make(chan int)
+
+	wg.Add(2)
+	go func(intChannel <-chan int) { //receiving ONLY channel
+		i := <-intChannel //receiving data from a channel
+		fmt.Printf("Receive from channel value (Role only channel) - %v  \n", i)
+		//intChannel <- 27
+		wg.Done()
+	}(intChannel)
+
+	go func(intChannel chan<- int) { //sending ONLY channel
+		intChannel <- 45
+		//fmt.Println(<-intChannel) //is a SENDING ONLY channel
+		wg.Done()
+	}(intChannel)
+
+	wg.Wait()
+}
+
+func goRoutineWithReaderAndWriterRole() {
+	intChannel := make(chan int)
+
+	wg.Add(2)
+	go func() { //receiving GoRoutine
+		i := <-intChannel //receiving data from a channel
+		fmt.Printf("Receive from channel value (Bidirectional) - %v  \n", i)
+		intChannel <- 27
+		wg.Done()
+	}()
+
+	go func() { //sending Goroutine
+		intChannel <- 45
+		fmt.Println(<-intChannel)
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
+
+//This created a deadlock
+func multipleGoroutinesOnSingleChannelDifferentNumbersOfSendersAndReceivers() {
+	intChannel := make(chan int)
+	go func() { //receiving GoRoutine
+		i := <-intChannel //receiving data from a channel
+		fmt.Printf("Receive from channel value 3 - %v  \n", i)
+		wg.Done()
+	}()
+
+	for j := 0; j < 5; j++ {
+		wg.Add(2)
+
+		go func() { //sending Goroutine
+			intChannel <- 48 //pause the execution of the Goroutine until there is space available in the channel
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func multipleGoroutinesOnSingleChannel() {
+	intChannel := make(chan int)
+	for j := 0; j < 5; j++ {
+		wg.Add(2)
+		go func() { //receiving GoRoutine
+			i := <-intChannel //receiving data from a channel
+			fmt.Printf("Receive from channel value 2 - %v  \n", i)
+			wg.Done()
+		}()
+
+		go func() { //sending Goroutine
+			intChannel <- 45
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func channelExample1() {
+	intChannel := make(chan int)
+	wg.Add(2) //need to spawn two Goroutines
+
+	go func() { //receiving GoRoutine
+		i := <-intChannel //receiving data from a channel
+		fmt.Printf("Receive from channel value %v  \n", i)
+		wg.Done()
+	}()
+
+	go func() { //sending Goroutine
+		intChannel <- 45
+		wg.Done()
+	}()
+	wg.Wait()
 }
 
 func sayHello2() {
